@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Proveedor oficial Ganamos.net · Recargas y Premios</title>
+  <meta name="description" content="Proveedor oficial Ganamos.net. Recargá tu cuenta y empezá a jugar en minutos. Atención humana 24/7 por chat y WhatsApp." />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+  <header class="nav">
+    <a class="brand" href="/" aria-label="Inicio">
+      <img src="/img/logo.svg" alt="Ganamos.net" />
+    </a>
+    <nav>
+      <a href="#beneficios">Beneficios</a>
+      <a href="#juegos">Juegos</a>
+      <a href="#como">Cómo funciona</a>
+      <a href="#contacto" class="cta-link">Recargar</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="badge">PROVEEDOR OFICIAL · GANAMOS.NET</span>
+      <h1>Recargá tu cuenta en minutos y empezá a jugar.</h1>
+      <p class="lead">
+        Somos proveedor oficial de <strong>Ganamos.net</strong>. Atención humana,
+        acreditación rápida y los mejores juegos en una sola plataforma.
+      </p>
+      <div class="hero-cta">
+        <button class="btn btn-primary" data-open-chat>Hacer mi primera carga</button>
+        <a class="btn btn-ghost" href="#juegos">Ver juegos</a>
+      </div>
+      <ul class="hero-bullets">
+        <li>Acreditación inmediata</li>
+        <li>Soporte 24/7</li>
+        <li>Métodos de pago locales</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="beneficios" class="grid grid-3">
+    <article class="card">
+      <h3>Acreditación rápida</h3>
+      <p>En cuanto enviás el comprobante, validamos y acreditamos tu carga en minutos.</p>
+    </article>
+    <article class="card">
+      <h3>Atención humana</h3>
+      <p>Hablás con personas reales. Sin formularios eternos ni respuestas automáticas frías.</p>
+    </article>
+    <article class="card">
+      <h3>Operación segura</h3>
+      <p>Plataforma oficial Ganamos.net. Tu saldo y tus datos siempre protegidos.</p>
+    </article>
+  </section>
+
+  <section id="juegos" class="games">
+    <h2>Los mejores juegos</h2>
+    <p class="section-sub">Slots, ruleta, blackjack, deportes y más — todo desde una sola cuenta.</p>
+    <div class="grid grid-4">
+      <div class="game"><span>Slots</span></div>
+      <div class="game"><span>Ruleta</span></div>
+      <div class="game"><span>Blackjack</span></div>
+      <div class="game"><span>Crash</span></div>
+      <div class="game"><span>Deportes</span></div>
+      <div class="game"><span>Póker</span></div>
+      <div class="game"><span>Bingo</span></div>
+      <div class="game"><span>En Vivo</span></div>
+    </div>
+  </section>
+
+  <section id="como" class="steps">
+    <h2>Cómo funciona</h2>
+    <ol>
+      <li><strong>Abrí el chat</strong> y dejanos tu nombre y usuario de Ganamos.net.</li>
+      <li><strong>Hacé la transferencia</strong> al CBU/alias que te pasamos.</li>
+      <li><strong>Adjuntá el comprobante</strong> en el chat.</li>
+      <li><strong>Te acreditamos</strong> y seguimos por WhatsApp si querés.</li>
+    </ol>
+    <button class="btn btn-primary" data-open-chat>Empezar ahora</button>
+  </section>
+
+  <section id="contacto" class="contact">
+    <h2>¿Listo para jugar?</h2>
+    <p>Tocá el botón y abrí el chat. Te atiende una persona del equipo.</p>
+    <button class="btn btn-primary btn-lg" data-open-chat>Abrir chat</button>
+  </section>
+
+  <footer class="foot">
+    <p>© <span id="year"></span> Proveedor oficial Ganamos.net · Jugá responsablemente. Solo mayores de 18 años.</p>
+  </footer>
+
+  <!-- ====== Chat widget ====== -->
+  <button id="chat-launcher" class="chat-launcher" aria-label="Abrir chat">
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+      <path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2z"/>
+    </svg>
+    <span class="chat-launcher-dot" id="chat-unread" hidden>1</span>
+  </button>
+
+  <aside id="chat-panel" class="chat-panel" aria-hidden="true">
+    <header class="chat-head">
+      <div class="chat-head-avatar">L</div>
+      <div class="chat-head-info">
+        <strong id="chat-agent">Lucía · Atención al cliente</strong>
+        <span id="chat-status" class="chat-status"><i></i> en línea</span>
+      </div>
+      <button class="chat-close" aria-label="Cerrar" id="chat-close">×</button>
+    </header>
+    <div class="chat-body" id="chat-body" aria-live="polite"></div>
+    <div class="chat-quick" id="chat-quick"></div>
+    <form class="chat-input" id="chat-form" autocomplete="off">
+      <label class="chat-attach" title="Adjuntar comprobante">
+        <input type="file" id="chat-file" accept="image/*,application/pdf" hidden />
+        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M16.5 6.5L9 14a3 3 0 0 0 4.24 4.24l8-8a5 5 0 1 0-7.07-7.07l-8.49 8.5A7 7 0 0 0 15.61 21.6l7.07-7.07-1.41-1.41-7.07 7.07a5 5 0 0 1-7.07-7.07l8.49-8.49a3 3 0 0 1 4.24 4.24l-8 8a1 1 0 0 1-1.41-1.41L17.91 7.9z"/></svg>
+      </label>
+      <input type="text" id="chat-text" placeholder="Escribí tu mensaje..." aria-label="Mensaje" />
+      <button type="submit" class="chat-send" aria-label="Enviar">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </form>
+    <p class="chat-foot">Atención humana · respuestas en minutos</p>
+  </aside>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/chat.js" defer></script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

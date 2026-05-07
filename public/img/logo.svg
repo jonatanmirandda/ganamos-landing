@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 110" role="img" aria-label="GANAMOS.NET">
+  <defs>
+    <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8f8f8"/>
+      <stop offset="40%" stop-color="#bfbfbf"/>
+      <stop offset="55%" stop-color="#7a7a7a"/>
+      <stop offset="100%" stop-color="#e6e6e6"/>
+    </linearGradient>
+    <linearGradient id="purple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9a56c7"/>
+      <stop offset="100%" stop-color="#5b2a85"/>
+    </linearGradient>
+    <filter id="bevel" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.6"/>
+      <feSpecularLighting result="spec" surfaceScale="2" specularConstant="0.9" specularExponent="20" lighting-color="#ffffff">
+        <feDistantLight azimuth="225" elevation="55"/>
+      </feSpecularLighting>
+      <feComposite in="spec" in2="SourceAlpha" operator="in" result="speclit"/>
+      <feMerge>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="speclit"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g font-family="'Impact','Arial Black',sans-serif" font-weight="900" font-size="78" text-anchor="middle" filter="url(#bevel)">
+    <!-- G -->
+    <text x="32" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">G</text>
+    <!-- N -->
+    <text x="100" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">N</text>
+
+    <!-- A as spade -->
+    <g transform="translate(135,18)">
+      <path d="M30 6 C 14 26, 0 38, 0 52 C 0 64, 10 72, 20 72 C 26 72, 30 68, 32 64 L 28 78 L 38 78 L 34 64 C 36 68, 40 72, 46 72 C 56 72, 66 64, 66 52 C 66 38, 52 26, 36 6 C 35 4, 33 4, 30 6 Z"
+            fill="url(#purple)" stroke="#3a1758" stroke-width="1.5"/>
+    </g>
+
+    <!-- M -->
+    <text x="234" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">M</text>
+    <!-- O -->
+    <text x="290" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">O</text>
+    <!-- S -->
+    <text x="338" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">S</text>
+  </g>
+
+  <!-- .NET -->
+  <g font-family="'Impact','Arial Black',sans-serif" font-weight="900" font-size="34" fill="#ff8a1f">
+    <text x="372" y="78">.NET</text>
+  </g>
+</svg>
