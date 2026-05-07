@@ -24,26 +24,19 @@
   </defs>
 
   <g font-family="'Impact','Arial Black',sans-serif" font-weight="900" font-size="78" text-anchor="middle" filter="url(#bevel)">
-    <!-- G -->
     <text x="32" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">G</text>
-    <!-- N -->
     <text x="100" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">N</text>
 
-    <!-- A as spade -->
     <g transform="translate(135,18)">
       <path d="M30 6 C 14 26, 0 38, 0 52 C 0 64, 10 72, 20 72 C 26 72, 30 68, 32 64 L 28 78 L 38 78 L 34 64 C 36 68, 40 72, 46 72 C 56 72, 66 64, 66 52 C 66 38, 52 26, 36 6 C 35 4, 33 4, 30 6 Z"
             fill="url(#purple)" stroke="#3a1758" stroke-width="1.5"/>
     </g>
 
-    <!-- M -->
     <text x="234" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">M</text>
-    <!-- O -->
     <text x="290" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">O</text>
-    <!-- S -->
     <text x="338" y="80" fill="url(#silver)" stroke="#1a1a1a" stroke-width="1.2">S</text>
   </g>
 
-  <!-- .NET -->
   <g font-family="'Impact','Arial Black',sans-serif" font-weight="900" font-size="34" fill="#ff8a1f">
     <text x="372" y="78">.NET</text>
   </g>
