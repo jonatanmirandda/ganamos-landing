@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ganamos-landing
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PORT
+        value: 10000
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASS
+        sync: false                # Render te pide que lo ingreses manualmente al primer deploy
+      - key: WHATSAPP_NUMBER
+        sync: false                # Idem — formato: 5491155551234
+    healthCheckPath: /api/config
+    autoDeploy: true
