@@ -1,10 +1,9 @@
 /* =========================================================
- * Chat embebido — Ganamos.net (proveedor oficial)
- * Flujo conversacional con captura de datos, recepción
- * de comprobante y handoff a WhatsApp + admin en vivo.
+ * Chat embebido — Ganamos.net
+ * Los mensajes y datos vienen de /api/settings (configurables
+ * desde el panel admin sin tocar código).
  * =======================================================*/
 (() => {
-  // ----- DOM -----
   const launcher = document.getElementById('chat-launcher');
   const panel    = document.getElementById('chat-panel');
   const closeBtn = document.getElementById('chat-close');
@@ -14,35 +13,55 @@
   const fileIn   = document.getElementById('chat-file');
   const quickBox = document.getElementById('chat-quick');
   const unread   = document.getElementById('chat-unread');
+  const headAgent = document.getElementById('chat-agent');
+  const headAvatar = document.querySelector('.chat-head-avatar');
   document.querySelectorAll('[data-open-chat]').forEach(b => b.addEventListener('click', openChat));
 
-  // ----- Estado -----
   const STORE_KEY = 'ganamos_chat_v1';
   const persisted = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
   const state = {
     chatId: persisted.chatId || null,
     name:   persisted.name   || null,
     phone:  persisted.phone  || null,
-    user:   persisted.user   || null,    // usuario en Ganamos.net
+    user:   persisted.user   || null,
     amount: persisted.amount || null,
     step:   persisted.step   || 'greet',
     handoff: persisted.handoff || false,
     whatsappNumber: '5491100000000',
+    settings: null,
   };
-  function persist() {
-    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  function persist() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+
+  // ---------- helpers ----------
+  function tpl(str, vars) {
+    return String(str || '').replace(/\{(\w+)\}/g, (_, k) =>
+      vars[k] != null ? vars[k] : (state.settings && state.settings[k] != null ? state.settings[k] : '')
+    );
+  }
+  function msgText(key, vars = {}) {
+    const m = state.settings && state.settings.messages ? state.settings.messages[key] : null;
+    if (!m) return '';
+    const merged = {
+      agentName: state.settings.agentName || '',
+      cbu: state.settings.cbu || '',
+      alias: state.settings.alias || '',
+      titular: state.settings.titular || '',
+      minAmount: (state.settings.minAmount || 1000).toLocaleString('es-AR'),
+      ...vars,
+    };
+    return tpl(m, merged);
+  }
+  function applyAgentBranding() {
+    if (!state.settings) return;
+    if (headAgent) headAgent.textContent = `${state.settings.agentName} · ${state.settings.agentTitle}`;
+    if (headAvatar) headAvatar.textContent = state.settings.agentInitial || (state.settings.agentName||'A').charAt(0);
   }
 
-  // ----- Socket -----
+  // ---------- socket ----------
   const socket = io();
-  socket.on('connect', () => {
-    socket.emit('user:join', { chatId: state.chatId });
-  });
-  socket.on('user:joined', ({ chatId }) => {
-    state.chatId = chatId; persist();
-  });
+  socket.on('connect', () => { socket.emit('user:join', { chatId: state.chatId }); });
+  socket.on('user:joined', ({ chatId }) => { state.chatId = chatId; persist(); });
   socket.on('message', (msg) => {
-    // Solo pintar mensajes del operador o del sistema; los del bot ya los pintamos localmente.
     if (msg.sender === 'operator') {
       addMessage('operator', msg.text);
       bumpUnread();
@@ -50,13 +69,24 @@
       addMessage('system', msg.text);
     }
   });
+  socket.on('settings:updated', (s) => {
+    state.settings = s;
+    applyAgentBranding();
+  });
 
-  // ----- Config pública (whatsapp number) -----
-  fetch('/api/config').then(r => r.json()).then(cfg => {
-    if (cfg.whatsappNumber) state.whatsappNumber = cfg.whatsappNumber;
-  }).catch(() => {});
+  // ---------- carga inicial ----------
+  Promise.all([
+    fetch('/api/config').then(r => r.json()).catch(() => ({})),
+    fetch('/api/settings').then(r => r.json()).catch(() => null),
+  ]).then(([cfg, settings]) => {
+    if (cfg && cfg.whatsappNumber) state.whatsappNumber = cfg.whatsappNumber;
+    if (settings) {
+      state.settings = settings;
+      applyAgentBranding();
+    }
+  });
 
-  // ----- Render helpers -----
+  // ---------- render helpers ----------
   function addMessage(sender, text, opts = {}) {
     const wrap = document.createElement('div');
     wrap.className = `msg msg-${sender}`;
@@ -72,12 +102,11 @@
     body.appendChild(t); body.scrollTop = body.scrollHeight;
     return t;
   }
-  function botSay(text, delay = 700) {
+  function botSay(text, delay = 700, html = false) {
     const typing = showTyping();
     return new Promise(resolve => setTimeout(() => {
       typing.remove();
-      addMessage('bot', text);
-      // Reportar al admin lo que dijo el bot (trazabilidad)
+      addMessage('bot', text, { html });
       try { socket.emit('user:bot', { text }); } catch {}
       resolve();
     }, delay));
@@ -96,13 +125,8 @@
     });
   }
   function clearQuickReplies() { quickBox.innerHTML = ''; }
-  function bumpUnread() {
-    if (!panel.classList.contains('open')) {
-      unread.hidden = false;
-    }
-  }
+  function bumpUnread() { if (!panel.classList.contains('open')) unread.hidden = false; }
 
-  // ----- Open / Close -----
   function openChat() {
     panel.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
@@ -117,23 +141,28 @@
   launcher.addEventListener('click', () => panel.classList.contains('open') ? closeChat() : openChat());
   closeBtn.addEventListener('click', closeChat);
 
-  // ----- Flujo conversacional -----
+  // Esperar a que las settings hayan cargado antes de empezar el flujo
+  async function ensureSettings() {
+    let tries = 0;
+    while (!state.settings && tries < 50) {
+      await new Promise(r => setTimeout(r, 100));
+      tries++;
+    }
+  }
+
   async function startFlow() {
     state.greeted = true; persist();
-    await botSay('¡Hola! 👋 Soy Lucía, del equipo de proveedor oficial Ganamos.net.', 400);
-    await botSay('Te ayudo a hacer tu primera carga en menos de 2 minutos. ¿Cómo te llamás?', 900);
+    await ensureSettings();
+    await botSay(msgText('greeting1'), 400);
+    await botSay(msgText('greeting2'), 900);
     state.step = state.name ? 'ask_user' : 'ask_name';
     persist();
-    if (state.name) {
-      await botSay(`¡Buenísimo, ${state.name}! ¿Tu usuario en Ganamos.net?`);
-    }
+    if (state.name) await botSay(msgText('afterName', { name: state.name }) + ' ' + msgText('askUser'));
   }
 
   async function handleUserInput(text) {
     text = (text || '').trim();
     if (!text) return;
-
-    // pintar mensaje del usuario
     addMessage('user', text);
     socket.emit('user:message', { text });
 
@@ -142,44 +171,43 @@
         state.name = text;
         socket.emit('user:meta', { name: state.name });
         persist();
-        await botSay(`¡Buenísimo, ${state.name}! 😊`);
-        await botSay('¿Cuál es tu usuario en Ganamos.net? (si no tenés, escribí *no tengo*)');
-        state.step = 'ask_user';
-        persist();
+        await botSay(msgText('afterName', { name: state.name }));
+        await botSay(msgText('askUser'));
+        state.step = 'ask_user'; persist();
         break;
       }
       case 'ask_user': {
         if (/^no tengo$/i.test(text)) {
-          await botSay('No hay drama, te ayudamos a abrir la cuenta. ¿Me pasás tu DNI y un teléfono de contacto?');
+          await botSay(msgText('noAccount'));
           state.step = 'collect_dni';
         } else {
           state.user = text;
-          await botSay('Perfecto. ¿Qué monto querés cargar? (mínimo $1.000)');
+          await botSay(msgText('askAmount'));
           state.step = 'ask_amount';
         }
         persist();
         break;
       }
       case 'collect_dni': {
-        await botSay('¡Genial! Ya le paso los datos a un agente y te contactamos en minutos.');
-        state.step = 'open';
-        persist();
+        await botSay(msgText('noAccountAck'));
+        state.step = 'open'; persist();
         break;
       }
       case 'ask_amount': {
         const num = Number(String(text).replace(/[^\d]/g, ''));
-        if (!num || num < 1000) {
-          await botSay('El mínimo es $1.000. ¿Me decís el monto?');
+        const min = state.settings ? state.settings.minAmount : 1000;
+        if (!num || num < min) {
+          await botSay(msgText('amountTooLow'));
           break;
         }
         state.amount = num; persist();
-        await botSay(`Listo, ${state.amount.toLocaleString('es-AR')} pesos. Te paso los datos para transferir 👇`);
-        await botSay(`<strong>CBU:</strong> 0000003100099876543210<br><strong>Alias:</strong> GANAMOS.OFICIAL.MP<br><strong>Titular:</strong> Operador Oficial S.A.`, 600);
+        const formattedAmount = state.amount.toLocaleString('es-AR');
+        await botSay(msgText('amountConfirm', { amount: formattedAmount }));
+        await botSay(msgText('bankInfo'), 600, true);
         await new Promise(r => setTimeout(r, 200));
-        addMessage('bot', 'Cuando termines la transferencia, <strong>adjuntá el comprobante</strong> tocando el clip 📎', { html: true });
-        try { socket.emit('user:bot', { text: 'Te paso CBU y alias. Adjuntá el comprobante cuando termines.' }); } catch {}
-        state.step = 'wait_receipt';
-        persist();
+        addMessage('bot', msgText('askReceipt'), { html: true });
+        try { socket.emit('user:bot', { text: msgText('askReceipt').replace(/<[^>]+>/g, '') }); } catch {}
+        state.step = 'wait_receipt'; persist();
         setQuickReplies([
           { label: 'Adjuntar comprobante', value: '__attach__' },
           { label: 'No tengo cuenta bancaria' },
@@ -190,24 +218,22 @@
         if (text === '__attach__') {
           fileIn.click();
         } else if (/no tengo/i.test(text)) {
-          await botSay('Ok, también aceptamos efectivo en puntos de pago. ¿Querés que te pase la lista?');
+          await botSay(msgText('noBank'));
         } else {
-          await botSay('Cuando tengas el comprobante, tocá el clip 📎 para adjuntarlo. ¡Te espero!');
+          await botSay(msgText('waitReceipt'));
         }
         break;
       }
       case 'after_receipt': {
-        await botSay('¿Querés algo más mientras tanto?');
+        await botSay(msgText('fallback'));
         break;
       }
       default: {
-        // chat libre — responder por defecto y dejar que el operador tome
-        await botSay('Te leo, ya hay un agente humano disponible para seguir la conversación 💬');
+        await botSay(msgText('fallback'));
       }
     }
   }
 
-  // ----- Input -----
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const t = input.value;
@@ -215,22 +241,18 @@
     handleUserInput(t);
   });
 
-  // ----- Adjuntar comprobante -----
   fileIn.addEventListener('change', async () => {
     const file = fileIn.files[0];
     if (!file) return;
     if (!state.chatId) {
-      // Esperar a que el socket asigne chatId
       await new Promise(r => {
         const i = setInterval(() => { if (state.chatId) { clearInterval(i); r(); } }, 100);
       });
     }
-
     const fd = new FormData();
     fd.append('file', file);
     fd.append('chatId', state.chatId);
 
-    // Vista previa local
     const wrap = document.createElement('div');
     wrap.className = 'msg msg-user';
     wrap.innerHTML = `<div class="msg-file">📎 ${escapeHtml(file.name)}</div>`;
@@ -252,23 +274,19 @@
     }
 
     fileIn.value = '';
-    await botSay('¡Recibido! 🎉 Ya estoy validando el comprobante con un operador.', 700);
-    await botSay('Para acreditar más rápido, te paso a WhatsApp con el agente humano que te va a confirmar la carga ✅', 1200);
-
-    // Mensaje system para historial
+    await botSay(msgText('receiptReceived'), 700);
+    await botSay(msgText('handoff'), 1200);
     addMessage('system', 'Derivando a WhatsApp...');
 
     state.handoff = true; state.step = 'after_receipt'; persist();
     socket.emit('user:handoff');
 
-    // Construir link a WhatsApp con resumen
     const summary = [
       'Hola, soy ' + (state.name || 'cliente') + '.',
       state.user   ? 'Usuario Ganamos.net: ' + state.user : null,
       state.amount ? 'Monto cargado: $' + state.amount.toLocaleString('es-AR') : null,
       'Te envío comprobante por acá. (Chat ID: ' + state.chatId + ')',
     ].filter(Boolean).join('\n');
-
     const wa = `https://wa.me/${state.whatsappNumber}?text=${encodeURIComponent(summary)}`;
 
     const link = document.createElement('a');
@@ -295,6 +313,5 @@
     return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   }
 
-  // Si ya había nombre/usuario guardados, restaurar al abrir
   if (state.name) state.greeted = true;
 })();
